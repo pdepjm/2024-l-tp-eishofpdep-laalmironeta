@@ -1,50 +1,59 @@
 % Aquí va el código.
 
 %jugador(Nombre,Civilizacion,Tecnologia) Punto 1
-jugador(ana,romanos,herreria).
-jugador(ana,romanos,forja).
-jugador(ana,romanos,emplumado).
-jugador(ana,romanos,laminas).
-jugador(beto,incas,herreria).
-jugador(beto,incas,forja).
-jugador(beto,incas,fundicion).
-jugador(carola,romanos,herreria).
-jugador(dimitri,romanos,herreria).
-jugador(dimitri,romanos,fundicion).
 
-nombre(Nombre):-
-    jugador(Nombre,_,_).
+%%% hay que sdeparar cómo modelamos la info
+juega(ana,romanos).
+juega(beto,incas).
+juega(carola,romanos).
+juega(dimitri,romanos).
 
-civilizacion(Civilizacion):-
-    jugador(_,Civilizacion,_).
+desarrollo(ana, herreria).
+desarrollo(ana,forja).
+desarrollo(ana,emplumado).
+desarrollo(ana,laminas).
+desarrollo(beto,herreria).
+desarrollo(beto,forja).
+desarrollo(beto,fundicion).
+desarrollo(carola,herreria).
+desarrollo(dimitri,herreria).
+desarrollo(dimitri,fundicion).
 
-tecnologia(Tecnologia):-
-    jugador(_,_,Tecnologia).
+tieneTecno(Civilizacion,Tecnologia):-
+    juega(Jugador,Civilizacion),
+    desarrollo(Jugador,Tecnologia).
 
 %esExpertoEnMetales(Jugador) Punto 2
-esExpertoEnMetales(Jugador):-
-    jugador(Jugador,_,herreria),
-    jugador(Jugador,_,forja),
-    jugador(Jugador,_,fundicion).
+
+% repiten lógica
+%esExpertoEnMetales(....):-
+       
+
 
 esExpertoEnMetales(Jugador):-
-    jugador(Jugador,_,herreria),
-    jugador(Jugador,_,forja),
-    jugador(Jugador,romanos,_).
+    desarrollo(Jugador,herreria),
+    desarrollo(Jugador,forja),
+    cumpleAlguna(Jugador).
+
+cumpleAlguna(Jugador):-
+    desarrollo(Jugador,fundicion).
+
+cumpleAlguna(Jugador):-
+    juega(Jugador,romanos).
 
 %esCivilizacionPopular(Civilizacion) Punto 3
 esCivilizacionPopular(Civilizacion):-
-    jugador(Jugador1,Civilizacion,_),
-    jugador(Jugador2,Civilizacion,_),
-    Jugador1\=Jugador2.
+    juega(Jugador1,Civilizacion),
+    juega(Jugador2,Civilizacion),
+    Jugador1 \= Jugador2.
 
 %tieneAlcanceGlobal(Tecnologia) Punto 4
 tieneAlcanceGlobal(Tecnologia):-
-    tecnologia(Tecnologia),
-    forall(jugador(Jugador,_,_),jugador(Jugador,_,Tecnologia)).
+    desarrollo(_,Tecnologia),
+    forall(desarrollo(Jugador,_),desarrollo(Jugador,Tecnologia)).
 
 
 %esCivilizacionLider(Civilizacion) Punto 5
 esCivilizacionLider(Civilizacion):-
-    civilizacion(Civilizacion),
-    forall(tecnologia(Tecnologia),jugador(_,Civilizacion,Tecnologia)).
+    juega(_,Civilizacion),
+    forall(tieneTecno(_,Tecnologia),tieneTecno(Civilizacion,Tecnologia)).
