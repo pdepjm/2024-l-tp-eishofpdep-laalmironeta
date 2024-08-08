@@ -53,39 +53,27 @@ esCivilizacionLider(Civilizacion):-
 
 % Segunda Entrega: Unidades
 
-% Definición de campeones con vida entre 1 y 100
-campeon(Vida) :- 
-    between(1, 100, Vida).
-
-jinete(caballo).
-jinete(camello).
-
-piquero(Nivel, escudo) :- 
-    member(Nivel, [1, 2, 3]).
-piquero(Nivel, sinEscudo) :- 
-    member(Nivel, [1, 2, 3]).
-
 % Definición de los jugadores y sus unidades
 % La sintaxis es: jugador(Nombre, [ListaDeUnidades])
 
-jugador(ana, [jinete(caballo),piquero(1, escudo),piquero(2, sinEscudo)]).
-jugador(beto, [campeon(100),campeon(80),piquero(1, escudo),jinete(camello)]).
-jugador(carola, [piquero(3, sinEscudo),piquero(2, escudo)]).
-jugador(dimitri, []).
+jugador(ana, jinete(caballo)).
+jugador(ana,piquero(1, escudo)).
+jugador(ana,piquero(2, sinEscudo)).
+jugador(beto, campeon(100)).
+jugador(beto,campeon(80)).
+jugador(beto,piquero(1, escudo)).
+jugador(beto,jinete(camello)).
+
+jugador(carola,piquero(3, sinEscudo)).
+juegador(carola,piquero(2, escudo)).
 
 %Punto 7:
 vidaDeJinete(camello,80).
 vidaDeJinete(caballo,90).
 
-vidaDePiquero(Nivel, sinEscudo, Vida) :-
-    Nivel = 1,
-    Vida = 50.
-vidaDePiquero(Nivel, sinEscudo, Vida) :-
-    Nivel = 2,
-    Vida = 65.
-vidaDePiquero(Nivel, sinEscudo, Vida) :-
-    Nivel = 3,
-    Vida = 70.
+vidaDePiquero(1, sinEscudo, 50).
+vidaDePiquero(2, sinEscudo, 65).
+vidaDePiquero(3, sinEscudo, 70).
 
 vidaDePiquero(Nivel,escudo,Vida):-
     vidaDePiquero(Nivel,sinEscudo,VidaSinEscudo),
@@ -102,10 +90,10 @@ vidaDeUnidad(piquero(Nivel, Tipo), Vida) :-
 
 % Encontrar la vida máxima entre las unidades de un jugador
 
-maximaVidaDeUnidad(Jugador, MaxVida) :-
-    jugador(Jugador, Unidades),
-    findall(Vida, (member(Unidad, Unidades), vidaDeUnidad(Unidad, Vida)), Vidas),
-    max_member(MaxVida, Vidas).
+%% están pensando en funcional, o también procedural. Va con cuantificadores
+maximaVidaDeUnidad(Jugador, Unidad) :-
+    jugador(Jugador, Unidad),
+    forall(jugador(Jugador,Unidad2),tieneMasVida(Unidad,Unidad2)).
 
 %Punto 8
 % Definir las ventajas de tipo entre unidades
@@ -118,29 +106,26 @@ ventaja(piquero(_, _), jinete(_)).
 ventaja(jinete(camello), jinete(caballo)).
 
 % Comparar vidas si no hay ventaja por tipo
-compararVidaDeUnidades(Unidad1, Unidad2) :-
-    vidaDeUnidad(Unidad1, Vida1),
+tieneMasVida(UnidadMayor, Unidad2) :-
+    vidaDeUnidad(UnidadMayor, Vida1),
     vidaDeUnidad(Unidad2, Vida2),
-    Vida1 > Vida2.
+    Vida1 >= Vida2.
 
 %Saber si una unidad le gana a la otra
-%En caso que se necesite para la inversibilidad.
-%esUnidad(Unidad):- 
-%member(Unidad, [campeon, piquero,jinete]).
 
 leGana(Unidad1, Unidad2) :-
     ventaja(Unidad1, Unidad2).
     
 leGana(Unidad1, Unidad2) :-
     not(ventaja(Unidad2, Unidad1)),
-    compararVidaDeUnidades(Unidad1, Unidad2).
+    tieneMasVida(Unidad1, Unidad2).
 %Punto 9:
 
 % Contar piqueros con y sin escudo para un jugador
 contarPiqueroEscudo(Jugador, ConEscudo, SinEscudo) :-
     jugador(Jugador, Unidades),
     contarPiquero(Unidades, escudo, ConEscudo),
-    contarPiquero(Unidades, sin_escudo, SinEscudo).
+    contarPiquero(Unidades, sinEscudo, SinEscudo).
 
 % Contar piqueros de un tipo específico en una lista de unidades
 contarPiquero(Unidades, Tipo, CantidadDeUnidades) :-
@@ -159,14 +144,35 @@ puedeSupervivirAunAsido(Jugador) :-
 % Definición de dependencias entre tecnologías
 %dependencia(tecnologia,Depende)
 
-dependencia(molino, []).
-dependencia(collera, [molino]).
-dependencia(arado, [collera,molino]).
+dependencia(collera,molino).
+dependencia(arado,collera).
+dependencia(laminas,herreria).
+dependencia(forja,herreria).
+dependencia(emplumado,herreria).
+dependencia(punzon,emplumado).
+dependencia(fundicion,forja).
+dependencia(malla,laminas).
+dependencia(horno,fundicion).
+dependencia(placas,malla).
 
-dependencia(herreria, []).
-dependencia(emplumado,[herreria]).
-dependencia(punzon,[emplumado,herreria]).
+sinPrecedencia(Tecnologia):-
+    dependencia(_,Tecnologia),
+    not(dependencia(Tecnologia,_)).
 
-dependencia(laminas,[herreria]).
-dependencia(malla,[laminas,herreria]).
-dependencia(placas,[laminas,malla,herreria]).
+dependeDe(Dependiente,DependeDe):-
+    dependencia(Dependiente,DependeDe).
+
+dependeDe(Dependiente,DependeDe):-
+    dependencia(DependeDirecto,DependeDe),
+    dependeDe(Dependiente,DependeDirecto).
+
+puedeDesarrollar(Jugador,Tecnologia):-
+    jugador(Jugador,_),
+    desarrollo(_,Tecnologia),
+    not(desarrollo(Jugador,Tecnologia)),
+    forall(dependeDe(Tecnologia,Depende),desarrollo(Jugador,Depende)).
+
+puedeDesarrollar(Jugador,Tecnologia):-
+    jugador(Jugador,_),
+    sinPrecedencia(Tecnologia),
+    not(desarrollo(Jugador,Tecnologia)).
