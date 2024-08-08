@@ -77,10 +77,15 @@ jugador(dimitri, []).
 vidaDeJinete(camello,80).
 vidaDeJinete(caballo,90).
 
-vidaDePiquero(Nivel,sinEscudo,Vida):-
-    (Nivel = 1 -> Vida = 50;
-     Nivel = 2 -> Vida = 65;
-     Nivel = 3 -> Vida = 70).
+vidaDePiquero(Nivel, sinEscudo, Vida) :-
+    Nivel = 1,
+    Vida = 50.
+vidaDePiquero(Nivel, sinEscudo, Vida) :-
+    Nivel = 2,
+    Vida = 65.
+vidaDePiquero(Nivel, sinEscudo, Vida) :-
+    Nivel = 3,
+    Vida = 70.
 
 vidaDePiquero(Nivel,escudo,Vida):-
     vidaDePiquero(Nivel,sinEscudo,VidaSinEscudo),
@@ -119,6 +124,49 @@ compararVidaDeUnidades(Unidad1, Unidad2) :-
     Vida1 > Vida2.
 
 %Saber si una unidad le gana a la otra
+%En caso que se necesite para la inversibilidad.
+%esUnidad(Unidad):- 
+%member(Unidad, [campeon, piquero,jinete]).
+
 leGana(Unidad1, Unidad2) :-
-    (ventaja(Unidad1, Unidad2) -> true;
-    \+ ventaja(Unidad2, Unidad1) -> compararVidaDeUnidades(Unidad1, Unidad2)).
+    ventaja(Unidad1, Unidad2).
+    
+leGana(Unidad1, Unidad2) :-
+    not(ventaja(Unidad2, Unidad1)),
+    compararVidaDeUnidades(Unidad1, Unidad2).
+%Punto 9:
+
+% Contar piqueros con y sin escudo para un jugador
+contarPiqueroEscudo(Jugador, ConEscudo, SinEscudo) :-
+    jugador(Jugador, Unidades),
+    contarPiquero(Unidades, escudo, ConEscudo),
+    contarPiquero(Unidades, sin_escudo, SinEscudo).
+
+% Contar piqueros de un tipo específico en una lista de unidades
+contarPiquero(Unidades, Tipo, CantidadDeUnidades) :-
+    findall(1, (member(piquero(_, Tipo), Unidades)), Lista),
+    length(Lista, CantidadDeUnidades).
+
+% Verificar si el jugador puede sobrevivir al asedio
+puedeSupervivirAunAsido(Jugador) :-
+    contarPiqueroEscudo(Jugador, ConEscudo, SinEscudo),
+    ConEscudo > SinEscudo.
+
+% Punto 10:
+% Se sabe que existe un árbol de tecnologías, que indica dependencias entre ellas.
+% Hasta no desarrollar una, no se puede desarrollar la siguiente. Modelar el siguiente árbol de ejemplo: 
+
+% Definición de dependencias entre tecnologías
+%dependencia(tecnologia,Depende)
+
+dependencia(molino, []).
+dependencia(collera, [molino]).
+dependencia(arado, [collera,molino]).
+
+dependencia(herreria, []).
+dependencia(emplumado,[herreria]).
+dependencia(punzon,[emplumado,herreria]).
+
+dependencia(laminas,[herreria]).
+dependencia(malla,[laminas,herreria]).
+dependencia(placas,[laminas,malla,herreria]).
